@@ -1,0 +1,28 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Secrets - NEVER commit these
+**/appsettings.Development.json
+**/appsettings.Production.json
+components/*.yaml 
+
+# Keep template
+appsettings.json
+
+# Docker
+**/.dockerignore
+
+# Visual Studio
+.vs/
+*.rsuser
+
+# Environment
+.env
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
