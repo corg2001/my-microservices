@@ -1,0 +1,84 @@
+name: Build and Deploy Microservices
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AZURE_RESOURCE_GROUP: my-microservices-rg
+  ACR_NAME: mymicroservicesacr
+  CONTAINER_APPS_ENV: my-microservices-env
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout code ──────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # ── Login to Azure ─────────────────────────────────────
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+            }
+
+      # ── Login to ACR ───────────────────────────────────────
+      - name: Login to ACR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # ── Build and Push OrderService ────────────────────────
+      - name: Build and Push OrderService
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }} \
+            -f My_Microservices/Dockerfile .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }}
+
+      # ── Build and Push InventoryService ───────────────────
+      - name: Build and Push InventoryService
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }} \
+            -f InventoryService/Dockerfile .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }}
+
+      # ── Build and Push EmployeeService ────────────────────
+      - name: Build and Push EmployeeService
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }} \
+            -f EmployeeService/Dockerfile .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }}
+
+      # ── Deploy OrderService ────────────────────────────────
+      - name: Deploy OrderService
+        run: |
+          az containerapp update \
+            --name orderservice \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }}
+
+      # ── Deploy InventoryService ───────────────────────────
+      - name: Deploy InventoryService
+        run: |
+          az containerapp update \
+            --name inventoryservice \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }}
+
+      # ── Deploy EmployeeService ────────────────────────────
+      - name: Deploy EmployeeService
+        run: |
+          az containerapp update \
+            --name employeeservice \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }}
