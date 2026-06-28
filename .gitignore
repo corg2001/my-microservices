@@ -7,7 +7,6 @@
 # Secrets - NEVER commit these
 **/appsettings.Development.json
 **/appsettings.Production.json
-components/*.yaml
 
 # Keep template
 appsettings.json
@@ -25,4 +24,5 @@ appsettings.json
 # Terraform
 *.tfstate
 *.tfstate.backup
-.terraform/"components/*.yaml" 
+.terraform/
+components/*.yaml
