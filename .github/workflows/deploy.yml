@@ -38,25 +38,28 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # ── Build and Push OrderService ────────────────────────
+      # ── Build and Push OrderService ────────────────────────────
       - name: Build and Push OrderService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }} \
-            -f My_Microservices/Dockerfile .
+            -f My_Microservices/Dockerfile \
+            My_Microservices/
           docker push ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }}
 
-      # ── Build and Push InventoryService ───────────────────
+      # ── Build and Push InventoryService ───────────────────────
       - name: Build and Push InventoryService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }} \
-            -f InventoryService/Dockerfile .
+            -f InventoryService/Dockerfile \
+            InventoryService/
           docker push ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }}
 
-      # ── Build and Push EmployeeService ────────────────────
+      # ── Build and Push EmployeeService ────────────────────────
       - name: Build and Push EmployeeService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }} \
-            -f EmployeeService/Dockerfile .
+            -f EmployeeService/Dockerfile \
+            EmployeeService/
           docker push ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }}
 
       # ── Deploy OrderService ────────────────────────────────
