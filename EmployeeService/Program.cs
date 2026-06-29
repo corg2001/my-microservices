@@ -1,13 +1,11 @@
 using EmployeeService.Data;
+using EmployeeService.Services;
 using Microsoft.EntityFrameworkCore;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
@@ -19,6 +17,9 @@ builder.Services.AddDbContext<EmployeeDbContext>(options =>
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null)));
+
+// Background service — consumes salary change CDC events from Event Hubs
+builder.Services.AddHostedService<SalaryChangeConsumer>();
 
 var app = builder.Build();
 

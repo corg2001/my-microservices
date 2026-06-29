@@ -123,13 +123,20 @@ jobs:
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }}
 
-      # ── Deploy EmployeeService ────────────────────────────
+      # ── Deploy EmployeeService ────────────────────────
       - name: Deploy EmployeeService
         run: |
+          # Ensure Event Hubs secret exists in the Container App
+          az containerapp secret set \
+            --name employeeservice \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --secrets "eventhubs-connection-string=${{ secrets.EVENTHUBS_CONNECTION_STRING }}"
+          # Deploy new image and wire Event Hubs connection string as env var
           az containerapp update \
             --name employeeservice \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }}
+            --image ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }} \
+            --set-env-vars "EventHubs__ConnectionString=secretref:eventhubs-connection-string"
       # ── Deploy Debezium ───────────────────────────────────
       - name: Deploy Debezium
         run: |
