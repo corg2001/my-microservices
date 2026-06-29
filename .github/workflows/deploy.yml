@@ -54,8 +54,6 @@ jobs:
           echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
 
       # ── Run Database Migrations ────────────────────────────
-      # Idempotent — IF NOT EXISTS guards prevent re-running.
-      # sqlcmd is pre-installed on GitHub Actions ubuntu runners.
       - name: Run CDC Migration
         run: |
           sqlcmd \
@@ -65,7 +63,6 @@ jobs:
             -P "${{ secrets.SQL_ADMIN_PASSWORD }}" \
             -i EmployeeService/Migrations/Scripts/enable-cdc.sql \
             -b
-        # -b flag: exit with error code if SQL errors occur
 
       # ── Login to ACR ───────────────────────────────────────
       - name: Login to ACR
@@ -130,3 +127,10 @@ jobs:
             --name employeeservice \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }}
+      # ── Deploy Debezium ───────────────────────────────────
+      - name: Deploy Debezium
+        run: |
+          az containerapp update \
+            --name debezium \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/debezium:latest

@@ -331,7 +331,7 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
       containers: [
         {
           name: 'debezium'
-          image: '${acrName}.azurecr.io/debezium:latest'
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
