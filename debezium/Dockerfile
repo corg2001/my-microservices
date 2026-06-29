@@ -1,12 +1,10 @@
 # ============================================================
 # Debezium SQL Server Connector for Azure Event Hubs (Kafka)
-# Base image includes Kafka Connect runtime.
-# We add the SQL Server connector plugin on top.
+# Base image includes Kafka Connect runtime + SQL Server connector.
 # ============================================================
-FROM debezium/connect:2.7
+FROM quay.io/debezium/connect:2.6
 
 # SQL Server connector is bundled in debezium/connect — no extra install needed.
-# This Dockerfile exists so we can version-pin and customize if needed.
+# Using quay.io registry (Debezium's official registry since Docker Hub deprecation).
 
-# Expose Kafka Connect REST API port
 EXPOSE 8083
