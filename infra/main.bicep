@@ -1,7 +1,8 @@
 // ============================================================
 // main.bicep — My Microservices Portfolio
 // Covers: Container Apps, ACR, Cosmos DB, Service Bus (Standard),
-//         Azure SQL, APIM, Event Hubs (Phase 2), Log Analytics
+//         Azure SQL, APIM, Event Hubs (Phase 2), Log Analytics,
+//         Storage Account (Debezium offset storage)
 // Deploy: az deployment group create \
 //           --resource-group my-microservices-rg \
 //           --template-file infra/main.bicep \
@@ -31,6 +32,7 @@ var logAnalyticsName       = 'workspace-mymicroservicesrgCzlN'
 // Phase 2
 var eventHubsNamespaceName = 'my-microservices-eh'
 var eventHubName           = 'employee-salary-changes'
+var storageAccountName     = 'mymicroservicesstore'   // max 24 chars, lowercase, no hyphens
 
 // ── Log Analytics Workspace ───────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -231,9 +233,32 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' =
   }
 }
 
+// ── Storage Account (Debezium offset + schema registry storage) 
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'   // Locally redundant — sufficient for offset tracking
+  }
+  kind: 'StorageV2'
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+  }
+}
+
+// Container for Debezium offset storage
+resource debeziumOffsetContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/debezium-offsets'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 // ── Outputs (useful for pipeline steps and debugging) ─────────
 output acrLoginServer string = acr.properties.loginServer
 output containerAppsEnvId string = containerAppsEnv.id
 output serviceBusEndpoint string = serviceBus.properties.serviceBusEndpoint
 output eventHubsEndpoint string = eventHubsNamespace.properties.serviceBusEndpoint
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
+output storageAccountName string = storageAccount.name
