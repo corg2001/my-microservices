@@ -62,6 +62,7 @@ namespace EmployeeService.Services
                         try
                         {
                             var json = partitionEvent.Data.EventBody.ToString();
+                            _logger.LogInformation("Raw CDC event: {Raw}", json);
                             var changeEvent = JsonSerializer.Deserialize<SalaryChangeEvent>(json,
                                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
