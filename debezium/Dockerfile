@@ -4,12 +4,16 @@
 # ============================================================
 FROM quay.io/debezium/connect:2.6
 
-# Rename original entrypoint so we can wrap it
-RUN mv /docker-entrypoint.sh /debezium-entrypoint.sh
+USER root
 
-# Copy our custom startup script
+# Copy original entrypoint to a new name so we can wrap it
+RUN cp /docker-entrypoint.sh /debezium-entrypoint.sh
+
+# Copy our custom startup script over the original entrypoint
 COPY start-debezium.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh /debezium-entrypoint.sh
+
+USER 1001
 
 EXPOSE 8083
 
