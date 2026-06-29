@@ -30,6 +30,18 @@ jobs:
               "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             }
 
+      # ── Deploy Infrastructure (Bicep) ──────────────────────
+      # Runs before containers — ensures all Azure resources
+      # exist and are up to date before any app is deployed.
+      # Safe to run on every push: Bicep is idempotent.
+      - name: Deploy Infrastructure
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: infra/main.bicep
+          parameters: sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+          failOnStdErr: false
+
       # ── Login to ACR ───────────────────────────────────────
       - name: Login to ACR
         uses: docker/login-action@v2
@@ -38,7 +50,7 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # ── Build and Push OrderService ────────────────────────────
+      # ── Build and Push OrderService ────────────────────────
       - name: Build and Push OrderService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }} \
@@ -46,7 +58,7 @@ jobs:
             My_Microservices/
           docker push ${{ env.ACR_NAME }}.azurecr.io/orderservice:${{ github.sha }}
 
-      # ── Build and Push InventoryService ───────────────────────
+      # ── Build and Push InventoryService ───────────────────
       - name: Build and Push InventoryService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }} \
@@ -54,7 +66,7 @@ jobs:
             InventoryService/
           docker push ${{ env.ACR_NAME }}.azurecr.io/inventoryservice:${{ github.sha }}
 
-      # ── Build and Push EmployeeService ────────────────────────
+      # ── Build and Push EmployeeService ────────────────────
       - name: Build and Push EmployeeService
         run: |
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/employeeservice:${{ github.sha }} \
