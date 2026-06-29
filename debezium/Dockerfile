@@ -5,8 +5,8 @@ FROM quay.io/debezium/server:2.6
 
 USER root
 
-COPY generate-config.py /generate-config.py
-RUN python3 /generate-config.py && chmod +x /custom-entrypoint.sh
+COPY custom-entrypoint.sh /custom-entrypoint.sh
+RUN chmod +x /custom-entrypoint.sh
 
 USER 1001
 
