@@ -233,6 +233,37 @@ resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' =
   }
 }
 
+// Debezium internal topics — required before Debezium starts.
+// cdc.configs: stores connector configurations
+// cdc.offsets: tracks CDC log position (where Debezium left off)
+// cdc.status:  tracks connector and task status
+resource debeziumConfigsTopic 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' = {
+  parent: eventHubsNamespace
+  name: 'cdc.configs'
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
+resource debeziumOffsetsTopic 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' = {
+  parent: eventHubsNamespace
+  name: 'cdc.offsets'
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 25
+  }
+}
+
+resource debeziumStatusTopic 'Microsoft.EventHub/namespaces/eventhubs@2022-10-01-preview' = {
+  parent: eventHubsNamespace
+  name: 'cdc.status'
+  properties: {
+    messageRetentionInDays: 1
+    partitionCount: 1
+  }
+}
+
 // ── Storage Account (Debezium offset + schema registry storage) 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
@@ -262,3 +293,97 @@ output serviceBusEndpoint string = serviceBus.properties.serviceBusEndpoint
 output eventHubsEndpoint string = eventHubsNamespace.properties.serviceBusEndpoint
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output storageAccountName string = storageAccount.name
+
+// ── Debezium Container App ────────────────────────────────────
+// Runs continuously — reads CDC log from Azure SQL via Debezium
+// and writes change events to Event Hubs (Kafka surface).
+@secure()
+param eventHubsConnectionString string
+
+@secure()
+param storageConnectionString string
+
+@secure()
+param sqlAdminPasswordDebezium string = sqlAdminPassword
+
+resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
+  name: 'debezium'
+  location: location
+  properties: {
+    managedEnvironmentId: containerAppsEnv.id
+    configuration: {
+      secrets: [
+        {
+          name: 'eventhubs-connection-string'
+          value: eventHubsConnectionString
+        }
+        {
+          name: 'storage-connection-string'
+          value: storageConnectionString
+        }
+        {
+          name: 'sql-password'
+          value: sqlAdminPasswordDebezium
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'debezium'
+          image: '${acrName}.azurecr.io/debezium:latest'
+          resources: {
+            cpu: json('0.5')
+            memory: '1Gi'
+          }
+          env: [
+            {
+              name: 'BOOTSTRAP_SERVERS'
+              value: '${eventHubsNamespaceName}.servicebus.windows.net:9093'
+            }
+            {
+              name: 'GROUP_ID'
+              value: 'debezium-cdc-group'
+            }
+            {
+              name: 'CONFIG_STORAGE_TOPIC'
+              value: 'cdc.configs'
+            }
+            {
+              name: 'OFFSET_STORAGE_TOPIC'
+              value: 'cdc.offsets'
+            }
+            {
+              name: 'STATUS_STORAGE_TOPIC'
+              value: 'cdc.status'
+            }
+            {
+              name: 'CONNECT_SECURITY_PROTOCOL'
+              value: 'SASL_SSL'
+            }
+            {
+              name: 'CONNECT_SASL_MECHANISM'
+              value: 'PLAIN'
+            }
+            {
+              name: 'EVENTHUBS_CONNECTION_STRING'
+              secretRef: 'eventhubs-connection-string'
+            }
+            {
+              name: 'STORAGE_CONNECTION_STRING'
+              secretRef: 'storage-connection-string'
+            }
+            {
+              name: 'SQL_PASSWORD'
+              secretRef: 'sql-password'
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: 1   // Must stay running — CDC requires continuous connection
+        maxReplicas: 1   // Single instance — multiple instances would cause duplicate events
+      }
+    }
+  }
+}
