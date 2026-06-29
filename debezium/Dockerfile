@@ -5,11 +5,15 @@ FROM quay.io/debezium/connect:2.6
 
 USER root
 
-# Write startup script — single quotes prevent build-time variable expansion
-# Variables are evaluated at container runtime instead
 RUN printf '%s\n' \
     '#!/bin/bash' \
     'set -e' \
+    '' \
+    'echo "=== Testing Event Hubs connectivity on port 9093 ==="' \
+    'timeout 10 bash -c "cat < /dev/null > /dev/tcp/my-microservices-eh.servicebus.windows.net/9093" && echo "PORT 9093: OPEN" || echo "PORT 9093: BLOCKED or TIMEOUT"' \
+    '' \
+    'echo "=== Testing Event Hubs connectivity on port 443 ==="' \
+    'timeout 10 bash -c "cat < /dev/null > /dev/tcp/my-microservices-eh.servicebus.windows.net/443" && echo "PORT 443: OPEN" || echo "PORT 443: BLOCKED or TIMEOUT"' \
     '' \
     'JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\$ConnectionString\" password=\"${EVENTHUBS_CONNECTION_STRING}\";"' \
     '' \
