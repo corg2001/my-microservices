@@ -44,6 +44,15 @@ jobs:
           parameters: sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
           failOnStdErr: false
 
+      # ── Install sqlcmd ────────────────────────────────────
+      - name: Install sqlcmd
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> $GITHUB_PATH
+
       # ── Run Database Migrations ────────────────────────────
       # Idempotent — IF NOT EXISTS guards prevent re-running.
       # sqlcmd is pre-installed on GitHub Actions ubuntu runners.
