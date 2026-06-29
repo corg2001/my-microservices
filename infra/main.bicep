@@ -322,6 +322,7 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true        // Needed so pipeline runner can reach the REST API
         targetPort: 8083
         transport: 'http'
+        allowInsecure: false
       }
       registries: [
         {
@@ -358,6 +359,27 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
+          probes: [
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/connectors'
+                port: 8083
+              }
+              initialDelaySeconds: 60
+              periodSeconds: 15
+              failureThreshold: 10
+            }
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/connectors'
+                port: 8083
+              }
+              periodSeconds: 30
+              failureThreshold: 3
+            }
+          ]
           env: [
             {
               name: 'BOOTSTRAP_SERVERS'

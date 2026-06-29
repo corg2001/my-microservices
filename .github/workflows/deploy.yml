@@ -150,7 +150,7 @@ jobs:
             --output tsv)
 
           echo "Waiting for Debezium to start..."
-          sleep 30
+          sleep 90
 
           # Try up to 10 times with 15s between attempts
           for i in $(seq 1 10); do
