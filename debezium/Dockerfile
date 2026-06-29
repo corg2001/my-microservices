@@ -1,12 +1,10 @@
 # ============================================================
 # Debezium SQL Server Connector for Azure Event Hubs (Kafka)
-# Uses standalone mode — simpler, no distributed topic issues
 # ============================================================
 FROM quay.io/debezium/connect:2.6
 
 USER root
 
-# Write a runtime config generator script
 RUN printf '%s\n' \
     '#!/bin/bash' \
     'set -e' \
@@ -42,7 +40,7 @@ RUN printf '%s\n' \
     'EOF' \
     '' \
     'echo "=== Config generated, starting Kafka Connect ==="' \
-    'exec /kafka/bin/connect-distributed.sh /kafka/config/connect-distributed.properties' \
+    'cd /kafka && exec bin/connect-distributed.sh config/connect-distributed.properties' \
     > /custom-entrypoint.sh \
     && chmod +x /custom-entrypoint.sh
 
