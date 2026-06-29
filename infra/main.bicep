@@ -298,6 +298,12 @@ output storageAccountName string = storageAccount.name
 // Runs continuously — reads CDC log from Azure SQL via Debezium
 // and writes change events to Event Hubs (Kafka surface).
 @secure()
+param acrUsername string
+
+@secure()
+param acrPassword string
+
+@secure()
 param eventHubsConnectionString string
 
 @secure()
@@ -312,6 +318,13 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: containerAppsEnv.id
     configuration: {
+      registries: [
+        {
+          server: '${acrName}.azurecr.io'
+          username: acrUsername
+          passwordSecretRef: 'acr-password'
+        }
+      ]
       secrets: [
         {
           name: 'eventhubs-connection-string'
@@ -324,6 +337,10 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'sql-password'
           value: sqlAdminPasswordDebezium
+        }
+        {
+          name: 'acr-password'
+          value: acrPassword
         }
       ]
     }

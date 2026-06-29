@@ -42,6 +42,8 @@ jobs:
             sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
             eventHubsConnectionString=${{ secrets.EVENTHUBS_CONNECTION_STRING }}
             storageConnectionString=${{ secrets.STORAGE_CONNECTION_STRING }}
+            acrUsername=${{ secrets.ACR_USERNAME }}
+            acrPassword=${{ secrets.ACR_PASSWORD }}
           failOnStdErr: false
 
       # ── Install sqlcmd ─────────────────────────────────────
