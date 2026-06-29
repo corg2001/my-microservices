@@ -318,6 +318,11 @@ resource debeziumContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: containerAppsEnv.id
     configuration: {
+      ingress: {
+        external: true        // Needed so pipeline runner can reach the REST API
+        targetPort: 8083
+        transport: 'http'
+      }
       registries: [
         {
           server: '${acrName}.azurecr.io'

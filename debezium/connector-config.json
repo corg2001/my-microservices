@@ -1,37 +1,32 @@
 {
-  "name": "employee-salary-cdc",
-  "config": {
-    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+  "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
 
-    "database.hostname": "my-microservices-sql.database.windows.net",
-    "database.port": "1433",
-    "database.user": "sqladmin",
-    "database.password": "${file:/opt/kafka/secrets/debezium-secrets.properties:database.password}",
-    "database.names": "my-microservices-db",
-    "database.encrypt": "true",
-    "database.trustServerCertificate": "false",
+  "database.hostname": "my-microservices-sql.database.windows.net",
+  "database.port": "1433",
+  "database.user": "sqladmin",
+  "database.password": "${file:/opt/kafka/external-configuration/debezium-secrets/sql-password}",
+  "database.names": "my-microservices-db",
+  "database.encrypt": "true",
+  "database.trustServerCertificate": "false",
 
-    "table.include.list": "dbo.Employees",
-    "column.include.list": "dbo.Employees.Id,dbo.Employees.Name,dbo.Employees.Salary",
+  "table.include.list": "my-microservices-db.dbo.Employees",
+  "column.include.list": "my-microservices-db.dbo.Employees.Id,my-microservices-db.dbo.Employees.Name,my-microservices-db.dbo.Employees.Salary",
 
-    "topic.prefix": "cdc",
+  "topic.prefix": "cdc",
 
-    "database.history.kafka.bootstrap.servers": "${file:/opt/kafka/secrets/debezium-secrets.properties:eventhubs.bootstrap.servers}",
-    "database.history.kafka.topic": "cdc.schema-history",
-    "database.history.producer.security.protocol": "SASL_SSL",
-    "database.history.producer.sasl.mechanism": "PLAIN",
-    "database.history.producer.sasl.jaas.config": "${file:/opt/kafka/secrets/debezium-secrets.properties:eventhubs.jaas.config}",
-    "database.history.consumer.security.protocol": "SASL_SSL",
-    "database.history.consumer.sasl.mechanism": "PLAIN",
-    "database.history.consumer.sasl.jaas.config": "${file:/opt/kafka/secrets/debezium-secrets.properties:eventhubs.jaas.config}",
+  "schema.history.internal.kafka.bootstrap.servers": "my-microservices-eh.servicebus.windows.net:9093",
+  "schema.history.internal.kafka.topic": "cdc.schema-history",
+  "schema.history.internal.producer.security.protocol": "SASL_SSL",
+  "schema.history.internal.producer.sasl.mechanism": "PLAIN",
+  "schema.history.internal.producer.sasl.jaas.config": "${file:/opt/kafka/external-configuration/debezium-secrets/eventhubs-jaas}",
+  "schema.history.internal.consumer.security.protocol": "SASL_SSL",
+  "schema.history.internal.consumer.sasl.mechanism": "PLAIN",
+  "schema.history.internal.consumer.sasl.jaas.config": "${file:/opt/kafka/external-configuration/debezium-secrets/eventhubs-jaas}",
 
-    "offset.storage": "org.apache.kafka.connect.storage.FileOffsetBackingStore",
+  "snapshot.mode": "initial",
 
-    "snapshot.mode": "initial",
-
-    "transforms": "unwrap",
-    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-    "transforms.unwrap.drop.tombstones": "true",
-    "transforms.unwrap.delete.handling.mode": "rewrite"
-  }
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+  "transforms.unwrap.drop.tombstones": "true",
+  "transforms.unwrap.delete.handling.mode": "rewrite"
 }
