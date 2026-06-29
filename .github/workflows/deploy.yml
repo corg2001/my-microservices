@@ -44,6 +44,7 @@ jobs:
             storageConnectionString=${{ secrets.STORAGE_CONNECTION_STRING }}
             acrUsername=${{ secrets.ACR_USERNAME }}
             acrPassword=${{ secrets.ACR_PASSWORD }}
+            serviceBusConnectionString=${{ secrets.SERVICEBUS_CONNECTION_STRING }}
           failOnStdErr: false
 
       # ── Install sqlcmd ─────────────────────────────────────

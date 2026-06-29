@@ -286,6 +286,35 @@ resource debeziumOffsetContainer 'Microsoft.Storage/storageAccounts/blobServices
   }
 }
 
+// ── Dapr Components ──────────────────────────────────────────
+@secure()
+param serviceBusConnectionString string
+
+// pubsub — upgraded from queues to topics for pub/sub fan-out
+resource daprPubSub 'Microsoft.App/managedEnvironments/daprComponents@2023-05-01' = {
+  name: '${containerAppsEnv.name}/pubsub'
+  properties: {
+    componentType: 'pubsub.azure.servicebus.topics'
+    version: 'v1'
+    secrets: [
+      {
+        name: 'sb-connection-string'
+        value: serviceBusConnectionString
+      }
+    ]
+    metadata: [
+      {
+        name: 'connectionString'
+        secretRef: 'sb-connection-string'
+      }
+    ]
+    scopes: [
+      'orderservice'
+      'inventoryservice'
+    ]
+  }
+}
+
 // ── Outputs (useful for pipeline steps and debugging) ─────────
 output acrLoginServer string = acr.properties.loginServer
 output containerAppsEnvId string = containerAppsEnv.id
