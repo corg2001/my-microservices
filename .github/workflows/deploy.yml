@@ -8,6 +8,8 @@ env:
   AZURE_RESOURCE_GROUP: my-microservices-rg
   ACR_NAME: mymicroservicesacr
   CONTAINER_APPS_ENV: my-microservices-env
+  SQL_SERVER: my-microservices-sql.database.windows.net
+  SQL_DATABASE: my-microservices-db
 
 jobs:
   build-and-deploy:
@@ -41,6 +43,20 @@ jobs:
           template: infra/main.bicep
           parameters: sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
           failOnStdErr: false
+
+      # ── Run Database Migrations ────────────────────────────
+      # Idempotent — IF NOT EXISTS guards prevent re-running.
+      # sqlcmd is pre-installed on GitHub Actions ubuntu runners.
+      - name: Run CDC Migration
+        run: |
+          sqlcmd \
+            -S ${{ env.SQL_SERVER }} \
+            -d ${{ env.SQL_DATABASE }} \
+            -U sqladmin \
+            -P "${{ secrets.SQL_ADMIN_PASSWORD }}" \
+            -i EmployeeService/Migrations/Scripts/enable-cdc.sql \
+            -b
+        # -b flag: exit with error code if SQL errors occur
 
       # ── Login to ACR ───────────────────────────────────────
       - name: Login to ACR
