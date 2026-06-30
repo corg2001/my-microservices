@@ -27,6 +27,6 @@ namespace EmployeeService.Models
 		public string Email { get; set; } = string.Empty;
 		public string Department { get; set; } = string.Empty;
 		public string Position { get; set; } = string.Empty;
-		public string Salary { get; set; } = string.Empty;
+		public decimal Salary { get; set; } 
 	}
 }

@@ -100,7 +100,7 @@ namespace EmployeeService.Services
                     {
                         _logger.LogInformation(
                         "Salary change detected — Employee: {FirstName} {LastName} (ID: {Id}) | " +
-                        "{OldSalary} → {NewSalary} | Department: {Department}",
+                        "{OldSalary:C} → {NewSalary:C} | Department: {Department}",
                         changeEvent.After.FirstName,
                         changeEvent.After.LastName,
                         changeEvent.After.Id,
