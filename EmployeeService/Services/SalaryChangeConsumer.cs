@@ -2,9 +2,6 @@ using Azure.Messaging.EventHubs.Consumer;
 using EmployeeService.Models;
 using System;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 
 namespace EmployeeService.Services
 {
@@ -63,12 +60,13 @@ namespace EmployeeService.Services
                         {
                             var json = partitionEvent.Data.EventBody.ToString();
                             _logger.LogInformation("Raw CDC event: {Raw}", json);
-                            var changeEvent = JsonSerializer.Deserialize<SalaryChangeEvent>(json,
-                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                            if (changeEvent == null) continue;
+                            var envelope = JsonSerializer.Deserialize<DebeziumEnvelope>(json,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });                            
 
-                            await ProcessSalaryChangeAsync(changeEvent);
+                            if (envelope?.Payload == null) continue;
+
+                            await ProcessSalaryChangeAsync(envelope.Payload);
                         }
                         catch (JsonException ex)
                         {
@@ -101,14 +99,14 @@ namespace EmployeeService.Services
                     if (changeEvent.Before.Salary != changeEvent.After.Salary)
                     {
                         _logger.LogInformation(
-                            "Salary change detected — Employee: {FirstName} {LastName} (ID: {Id}) | " +
-                            "{OldSalary:C} → {NewSalary:C} | Department: {Department}",
-                            changeEvent.After.FirstName,
-                            changeEvent.After.LastName,
-                            changeEvent.After.Id,
-                            changeEvent.Before.Salary,
-                            changeEvent.After.Salary,
-                            changeEvent.After.Department);
+                        "Salary change detected — Employee: {FirstName} {LastName} (ID: {Id}) | " +
+                        "{OldSalary} → {NewSalary} | Department: {Department}",
+                        changeEvent.After.FirstName,
+                        changeEvent.After.LastName,
+                        changeEvent.After.Id,
+                        changeEvent.Before.Salary,
+                        changeEvent.After.Salary,
+                        changeEvent.After.Department);
                     }
                     else
                     {
