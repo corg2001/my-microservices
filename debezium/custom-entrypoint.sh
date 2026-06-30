@@ -29,6 +29,7 @@ printf '%s\n' \
   "debezium.sink.eventhubs.hubname=employee-salary-changes" \
   "debezium.format.value=json" \
   "debezium.format.key=json" \
+  "debezium.format.value.decimal.format=numeric" \
   > /debezium/conf/application.properties
 
 echo "=== Config written ==="
