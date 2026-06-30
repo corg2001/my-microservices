@@ -16,7 +16,7 @@ printf '%s\n' \
   "debezium.source.database.names=my-microservices-db" \
   "debezium.source.database.encrypt=true" \
   "debezium.source.database.trustServerCertificate=false" \
-  "debezium.source.table.include.list=my-microservices-db.dbo.Employees" \
+  "debezium.source.table.include.list=dbo.Employees" \
   "debezium.source.topic.prefix=cdc" \
   "debezium.source.snapshot.mode=initial" \
   "debezium.source.schema.history.internal=io.debezium.storage.file.history.FileSchemaHistory" \
